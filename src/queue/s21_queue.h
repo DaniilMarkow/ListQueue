@@ -41,6 +41,6 @@ class Queue {
     container_.Insert_many_back(std::forward<Args>(args)...);
   }
 };
-}  // namespace s21
+}
 
 #endif

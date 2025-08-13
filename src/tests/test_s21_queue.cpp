@@ -156,5 +156,5 @@ TEST(QueueTest, LargeData) {
   EXPECT_TRUE(q.Empty());
 }
 
-}  // namespace
-}  // namespace s21
+}
+}
