@@ -101,25 +101,36 @@ void List<T>::Clear() {
 template <typename T>
 typename List<T>::iterator List<T>::Insert(iterator pos,
                                            const_reference value) {
+  iterator result;
+
   if (pos == End()) {
     Push_back(value);
-    return iterator(tail_);
-  }
-
-  ListNode *current = pos.ptr_;
-  ListNode *new_node = new ListNode(value, current, current->prev);
-
-  if (current->prev) {
-    current->prev->next = new_node;
+    result = iterator(tail_);
   } else {
-    head_ = new_node;
+    ListNode *current = pos.ptr_;
+    ListNode *new_node = new ListNode(value, current, current->prev);
+
+    if (current->prev) {
+      current->prev->next = new_node;
+    } else {
+      head_ = new_node;
+    }
+    current->prev = new_node;
+
+    size_++;
+    result = iterator(new_node);
   }
-  current->prev = new_node;
-
-  size_++;
-  return iterator(new_node);
+  return result;
 }
-
+template <typename T>
+void List<T>::Reverse() {
+  ListNode *current = head_;
+  while (current) {
+    std::swap(current->prev, current->next);
+    current = current->prev;
+  }
+  std::swap(head_, tail_);
+}
 template <typename T>
 void List<T>::Erase(iterator pos) {
   if (pos == End() || !pos.ptr_) {
@@ -128,22 +139,18 @@ void List<T>::Erase(iterator pos) {
 
   if (pos.ptr_ == head_) {
     Pop_front();
-    return;
-  }
-
-  if (pos.ptr_ == tail_) {
+  } else if (pos.ptr_ == tail_) {
     Pop_back();
-    return;
+  } else {
+    ListNode *current = pos.ptr_;
+    ListNode *prev = current->prev;
+    ListNode *next = current->next;
+    prev->next = next;
+    next->prev = prev;
+
+    delete current;
+    size_--;
   }
-
-  ListNode *current = pos.ptr_;
-  ListNode *prev = current->prev;
-  ListNode *next = current->next;
-  prev->next = next;
-  next->prev = prev;
-
-  delete current;
-  size_--;
 }
 
 template <typename T>
@@ -211,146 +218,142 @@ void List<T>::Swap(List &other) {
 
 template <typename T>
 void List<T>::Merge(List &other) {
-  if (other.Empty()) return;
-  if (this == &other) return;
+  if (!other.Empty() && this != &other) {
+    ListNode dummy;
+    ListNode *current = &dummy;
+    ListNode *p1 = head_;
+    ListNode *p2 = other.head_;
 
-  ListNode dummy;
-  ListNode *current = &dummy;
-  ListNode *p1 = head_;
-  ListNode *p2 = other.head_;
-
-  while (p1 && p2) {
-    if (p1->value < p2->value) {
-      current->next = p1;
-      p1->prev = current;
-      p1 = p1->next;
-    } else {
-      current->next = p2;
-      p2->prev = current;
-      p2 = p2->next;
+    while (p1 && p2) {
+      if (p1->value < p2->value) {
+        current->next = p1;
+        p1->prev = current;
+        p1 = p1->next;
+      } else {
+        current->next = p2;
+        p2->prev = current;
+        p2 = p2->next;
+      }
+      current = current->next;
     }
-    current = current->next;
+
+    current->next = p1 ? p1 : p2;
+    if (current->next) {
+      current->next->prev = current;
+    }
+
+    head_ = dummy.next;
+    if (head_) {
+      head_->prev = nullptr;
+    }
+
+    tail_ = (p1) ? tail_ : other.tail_;
+    size_ += other.size_;
+
+    other.head_ = other.tail_ = nullptr;
+    other.size_ = 0;
   }
-
-  current->next = p1 ? p1 : p2;
-  if (current->next) current->next->prev = current;
-
-  head_ = dummy.next;
-  if (head_) head_->prev = nullptr;
-
-  tail_ = (p1) ? tail_ : other.tail_;
-  size_ += other.size_;
-
-  other.head_ = other.tail_ = nullptr;
-  other.size_ = 0;
 }
 
 template <typename T>
 void List<T>::Splice(iterator pos, List &other) {
-  if (other.Empty()) return;
+  if (!other.Empty()) {
+    ListNode *other_head = other.head_;
+    ListNode *other_tail = other.tail_;
+    ListNode *next_node = pos.ptr_;
+    ListNode *prev_node = (pos.ptr_) ? pos.ptr_->prev : tail_;
 
-  ListNode *other_head = other.head_;
-  ListNode *other_tail = other.tail_;
-  ListNode *next_node = pos.ptr_;
-  ListNode *prev_node = (pos.ptr_) ? pos.ptr_->prev : tail_;
+    if (prev_node) {
+      prev_node->next = other_head;
+    } else {
+      head_ = other_head;
+    }
 
-  if (prev_node) {
-    prev_node->next = other_head;
-  } else {
-    head_ = other_head;
+    other_head->prev = prev_node;
+
+    if (next_node) {
+      next_node->prev = other_tail;
+    } else {
+      tail_ = other_tail;
+    }
+
+    other_tail->next = next_node;
+    size_ += other.size_;
+
+    other.head_ = other.tail_ = nullptr;
+    other.size_ = 0;
   }
-
-  other_head->prev = prev_node;
-
-  if (next_node) {
-    next_node->prev = other_tail;
-  } else {
-    tail_ = other_tail;
-  }
-
-  other_tail->next = next_node;
-  size_ += other.size_;
-
-  other.head_ = other.tail_ = nullptr;
-  other.size_ = 0;
-}
-
-template <typename T>
-void List<T>::Reverse() {
-  ListNode *current = head_;
-  while (current) {
-    std::swap(current->prev, current->next);
-    current = current->prev;
-  }
-  std::swap(head_, tail_);
 }
 
 template <typename T>
 void List<T>::Unique() {
-  if (size_ < 2) return;
+  if (size_ >= 2) {
+    ListNode *current = head_;
+    while (current && current->next) {
+      if (current->value == current->next->value) {
+        ListNode *to_delete = current->next;
+        current->next = to_delete->next;
 
-  ListNode *current = head_;
-  while (current && current->next) {
-    if (current->value == current->next->value) {
-      ListNode *to_delete = current->next;
-      current->next = to_delete->next;
+        if (to_delete->next) {
+          to_delete->next->prev = current;
+        } else {
+          tail_ = current;
+        }
 
-      if (to_delete->next) {
-        to_delete->next->prev = current;
+        delete to_delete;
+        size_--;
       } else {
-        tail_ = current;
+        current = current->next;
       }
-
-      delete to_delete;
-      size_--;
-    } else {
-      current = current->next;
     }
   }
 }
 
 template <typename T>
 void List<T>::Sort() {
-  if (size_ < 2) return;
+  if (size_ >= 2) {
+    List left;
+    List right;
+    const size_t mid = size_ / 2;
 
-  List left;
-  List right;
-  const size_t mid = size_ / 2;
+    ListNode *current = head_;
+    for (size_t i = 0; i < mid; ++i) {
+      left.Push_back(current->value);
+      current = current->next;
+    }
+    while (current) {
+      right.Push_back(current->value);
+      current = current->next;
+    }
 
-  ListNode *current = head_;
-  for (size_t i = 0; i < mid; ++i) {
-    left.Push_back(current->value);
-    current = current->next;
-  }
-  while (current) {
-    right.Push_back(current->value);
-    current = current->next;
-  }
+    left.Sort();
+    right.Sort();
 
-  left.Sort();
-  right.Sort();
+    Clear();
+    ListNode *p1 = left.head_;
+    ListNode *p2 = right.head_;
 
-  Clear();
-  ListNode *p1 = left.head_;
-  ListNode *p2 = right.head_;
+    while (p1 && p2) {
+      if (p1->value < p2->value) {
+        Push_back(p1->value);
+        p1 = p1->next;
+      } else {
+        Push_back(p2->value);
+        p2 = p2->next;
+      }
+    }
 
-  while (p1 && p2) {
-    if (p1->value < p2->value) {
+    while (p1) {
       Push_back(p1->value);
       p1 = p1->next;
-    } else {
+    }
+    while (p2) {
       Push_back(p2->value);
       p2 = p2->next;
     }
-  }
 
-  while (p1) {
-    Push_back(p1->value);
-    p1 = p1->next;
-  }
-  while (p2) {
-    Push_back(p2->value);
-    p2 = p2->next;
+    left.head_ = left.tail_ = nullptr;
+    right.head_ = right.tail_ = nullptr;
   }
 }
 
@@ -375,6 +378,6 @@ template <typename... Args>
 void List<T>::Insert_many_front(Args &&...args) {
   (Push_front(std::forward<Args>(args)), ...);
 }
-}  // namespace s21
+}
 
 #endif

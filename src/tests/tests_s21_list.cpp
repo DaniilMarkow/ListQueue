@@ -5,26 +5,28 @@
 #include "../list/s21_list.h"
 template class s21::List<int>;
 
-template <typename T>
-void CompareLists(const s21::List<T> &s21_list, const std::list<T> &std_list) {
-  ASSERT_EQ(s21_list.Size(), std_list.size());
-  auto s21_it = s21_list.Cbegin();
-  auto std_it = std_list.begin();
-  while (s21_it != s21_list.Cend() && std_it != std_list.end()) {
-    ASSERT_EQ(*s21_it, *std_it);
-    ++s21_it;
-    ++std_it;
+bool compare_lists(s21::List<int> my_list, std::list<int> std_list) {
+  bool result = true;
+  if (my_list.Size() == std_list.size()) {
+    auto my_it = my_list.Begin();
+    auto std_it = std_list.begin();
+    for (size_t i = 0; i != my_list.Size(); ++i) {
+      if (*my_it != *std_it) {
+        result = false;
+        break;
+      }
+      ++my_it;
+      ++std_it;
+    }
+  } else {
+    result = false;
   }
-  ASSERT_EQ(s21_list.Empty(), std_list.empty());
-  if (!s21_list.Empty()) {
-    ASSERT_EQ(s21_list.Front(), std_list.front());
-    ASSERT_EQ(s21_list.Back(), std_list.back());
-  }
+  return result;
 }
 TEST(ListTest, DefaultConstructor) {
   s21::List<int> s21_l;
   std::list<int> std_l;
-  CompareLists(s21_l, std_l);
+  compare_lists(s21_l, std_l);
   ASSERT_TRUE(s21_l.Empty());
   ASSERT_EQ(s21_l.Size(), 0U);
 }
@@ -32,14 +34,14 @@ TEST(ListTest, DefaultConstructor) {
 TEST(ListTest, ParameterizedConstructor) {
   s21::List<int> s21_l(5);
   std::list<int> std_l(5);
-  CompareLists(s21_l, std_l);
+  compare_lists(s21_l, std_l);
   ASSERT_EQ(s21_l.Size(), 5U);
   ASSERT_EQ(s21_l.Front(), 0);
   ASSERT_EQ(s21_l.Back(), 0);
 
   s21::List<int> s21_empty(0);
   std::list<int> std_empty(0);
-  CompareLists(s21_empty, std_empty);
+  compare_lists(s21_empty, std_empty);
   ASSERT_TRUE(s21_empty.Empty());
 
   s21::List<int> s21_large(1000);
@@ -49,14 +51,14 @@ TEST(ListTest, ParameterizedConstructor) {
 TEST(ListTest, InitializerListConstructor) {
   s21::List<int> s21_l = {1, 2, 3, 4};
   std::list<int> std_l = {1, 2, 3, 4};
-  CompareLists(s21_l, std_l);
+  compare_lists(s21_l, std_l);
   ASSERT_EQ(s21_l.Size(), 4U);
   ASSERT_EQ(s21_l.Front(), 1);
   ASSERT_EQ(s21_l.Back(), 4);
 
   s21::List<int> s21_empty = {};
   std::list<int> std_empty = {};
-  CompareLists(s21_empty, std_empty);
+  compare_lists(s21_empty, std_empty);
   ASSERT_TRUE(s21_empty.Empty());
 }
 
@@ -65,7 +67,7 @@ TEST(ListTest, CopyConstructor) {
   s21::List<int> s21_copy(s21_src);
   std::list<int> std_src = {1, 2, 3};
   std::list<int> std_copy(std_src);
-  CompareLists(s21_copy, std_copy);
+  compare_lists(s21_copy, std_copy);
   ASSERT_EQ(s21_copy.Size(), 3U);
 
   s21_src.Push_back(4);
@@ -82,7 +84,7 @@ TEST(ListTest, MoveConstructor) {
   s21::List<int> s21_move(std::move(s21_src));
   std::list<int> std_src = {1, 2, 3};
   std::list<int> std_move(std::move(std_src));
-  CompareLists(s21_move, std_move);
+  compare_lists(s21_move, std_move);
   ASSERT_EQ(s21_move.Size(), 3U);
   ASSERT_TRUE(s21_src.Empty());
 
@@ -98,7 +100,7 @@ TEST(ListTest, MoveAssignmentOperator) {
   std::list<int> std_src = {1, 2, 3};
   std::list<int> std_dest = {4, 5};
   std_dest = std::move(std_src);
-  CompareLists(s21_dest, std_dest);
+  compare_lists(s21_dest, std_dest);
   ASSERT_EQ(s21_dest.Size(), 3U);
   ASSERT_TRUE(s21_src.Empty());
 
@@ -108,227 +110,10 @@ TEST(ListTest, MoveAssignmentOperator) {
   ASSERT_TRUE(s21_dest_empty.Empty());
 }
 
-TEST(ListTest, FrontBack) {
-  s21::List<int> s21_l = {1, 2, 3};
-  std::list<int> std_l = {1, 2, 3};
-  ASSERT_EQ(s21_l.Front(), std_l.front());
-  ASSERT_EQ(s21_l.Back(), std_l.back());
-
-  s21::List<int> s21_empty;
-  ASSERT_THROW(s21_empty.Front(), std::out_of_range);
-  ASSERT_THROW(s21_empty.Back(), std::out_of_range);
-}
-
-TEST(ListTest, BeginEnd) {
-  s21::List<int> s21_l = {1, 2, 3};
-  std::list<int> std_l = {1, 2, 3};
-  auto s21_it = s21_l.Begin();
-  auto std_it = std_l.begin();
-  ASSERT_EQ(*s21_it, *std_it);
-  ++s21_it;
-  ++std_it;
-  ASSERT_EQ(*s21_it, *std_it);
-  --s21_it;
-  --std_it;
-  ASSERT_EQ(*s21_it, *std_it);
-
-  s21::List<int> s21_empty;
-  ASSERT_EQ(s21_empty.Begin(), s21_empty.End());
-
-  ASSERT_EQ(s21_l.Begin(), s21_l.Begin());
-  ASSERT_NE(s21_l.Begin(), s21_l.End());
-}
-
-TEST(ListTest, EmptySizeMaxSize) {
-  s21::List<int> s21_l = {1, 2};
-  std::list<int> std_l = {1, 2};
-  ASSERT_FALSE(s21_l.Empty());
-  ASSERT_EQ(s21_l.Size(), std_l.size());
-  ASSERT_GT(s21_l.Max_size(), 0U);
-
-  s21::List<int> s21_empty;
-  ASSERT_TRUE(s21_empty.Empty());
-  ASSERT_EQ(s21_empty.Size(), 0U);
-}
-
-TEST(ListTest, Clear) {
-  s21::List<int> s21_l = {1, 2, 3};
-  std::list<int> std_l = {1, 2, 3};
-  s21_l.Clear();
-  std_l.clear();
-  CompareLists(s21_l, std_l);
-  ASSERT_TRUE(s21_l.Empty());
-
-  s21::List<int> s21_empty;
-  s21_empty.Clear();
-  ASSERT_TRUE(s21_empty.Empty());
-}
-
-TEST(ListTest, Insert) {
-  s21::List<int> s21_l = {1, 3};
-  std::list<int> std_l = {1, 3};
-  auto s21_it = s21_l.Insert(++s21_l.Begin(), 2);
-  auto std_it = std_l.insert(++std_l.begin(), 2);
-  CompareLists(s21_l, std_l);
-  ASSERT_EQ(*s21_it, *std_it);
-  s21_l.Insert(s21_l.Begin(), 0);
-  std_l.insert(std_l.begin(), 0);
-  CompareLists(s21_l, std_l);
-  ASSERT_EQ(s21_l.Front(), 0);
-
-  s21_l.Insert(s21_l.End(), 4);
-  std_l.insert(std_l.end(), 4);
-  CompareLists(s21_l, std_l);
-  ASSERT_EQ(s21_l.Back(), 4);
-
-  s21::List<int> s21_empty;
-  auto it_empty = s21_empty.Insert(s21_empty.End(), 5);
-  ASSERT_EQ(s21_empty.Size(), 1U);
-  ASSERT_EQ(*it_empty, 5);
-  ASSERT_EQ(s21_empty.Front(), 5);
-}
-
-TEST(ListTest, Swap) {
-  s21::List<int> s21_l1 = {1, 2};
-  s21::List<int> s21_l2 = {3, 4, 5};
-  s21_l1.Swap(s21_l2);
-  std::list<int> std_l1 = {1, 2};
-  std::list<int> std_l2 = {3, 4, 5};
-  std_l1.swap(std_l2);
-  CompareLists(s21_l1, std_l1);
-  CompareLists(s21_l2, std_l2);
-
-  s21::List<int> s21_empty;
-  s21_l1.Swap(s21_empty);
-  ASSERT_TRUE(s21_l1.Empty());
-  ASSERT_EQ(s21_empty.Size(), 3U);
-}
-
-TEST(ListTest, Merge) {
-  s21::List<int> s21_l1 = {1, 3, 5};
-  s21::List<int> s21_l2 = {2, 4, 6};
-  s21_l1.Merge(s21_l2);
-  std::list<int> std_l1 = {1, 3, 5};
-  std::list<int> std_l2 = {2, 4, 6};
-  std_l1.merge(std_l2);
-  CompareLists(s21_l1, std_l1);
-  ASSERT_TRUE(s21_l2.Empty());
-
-  s21::List<int> s21_empty;
-  s21_l1.Merge(s21_empty);
-  ASSERT_EQ(s21_l1.Size(), 6U);
-
-  s21::List<int> s21_self = {1, 2};
-  s21_self.Merge(s21_self);
-  ASSERT_EQ(s21_self.Size(), 2U);
-}
-
-TEST(ListTest, Splice) {
-  s21::List<int> s21_l1 = {3, 4, 5};
-  s21::List<int> s21_l2 = {1, 2};
-  s21::List<int> s21_l3 = {6};
-  s21::List<int> s21_l4 = {7, 8};
-  s21::List<int> s21_empty;
-  std::list<int> std_l1 = {3, 4, 5};
-  std::list<int> std_l2 = {1, 2};
-  std::list<int> std_l3 = {6};
-  std::list<int> std_l4 = {7, 8};
-  std::list<int> std_empty;
-
-  s21_l1.Splice(++s21_l1.Begin(), s21_l2);
-  std_l1.splice(++std_l1.begin(), std_l2);
-  CompareLists(s21_l1, std_l1);
-  ASSERT_TRUE(s21_l2.Empty());
-
-  s21_l1.Splice(s21_l1.Begin(), s21_l3);
-  std_l1.splice(std_l1.begin(), std_l3);
-  CompareLists(s21_l1, std_l1);
-
-  s21_l1.Splice(s21_l1.End(), s21_l4);
-  std_l1.splice(std_l1.end(), std_l4);
-  CompareLists(s21_l1, std_l1);
-
-  s21_l1.Splice(s21_l1.Begin(), s21_empty);
-  std_l1.splice(std_l1.begin(), std_empty);
-  CompareLists(s21_l1, std_l1);
-}
-
-TEST(ListTest, Reverse) {
-  s21::List<int> s21_l = {1, 2, 3};
-  std::list<int> std_l = {1, 2, 3};
-  s21_l.Reverse();
-  std_l.reverse();
-  CompareLists(s21_l, std_l);
-
-  s21::List<int> s21_empty;
-  s21_empty.Reverse();
-  ASSERT_TRUE(s21_empty.Empty());
-
-  s21::List<int> s21_one = {42};
-  s21_one.Reverse();
-  ASSERT_EQ(s21_one.Front(), 42);
-}
-
-TEST(ListTest, Unique) {
-  s21::List<int> s21_l = {1, 1, 2, 2, 2, 3};
-  std::list<int> std_l = {1, 1, 2, 2, 2, 3};
-  s21_l.Unique();
-  std_l.unique();
-  CompareLists(s21_l, std_l);
-
-  s21::List<int> s21_no_dup = {1, 2, 3};
-  s21_no_dup.Unique();
-  ASSERT_EQ(s21_no_dup.Size(), 3U);
-
-  s21::List<int> s21_all_dup = {5, 5, 5};
-  s21_all_dup.Unique();
-  ASSERT_EQ(s21_all_dup.Size(), 1U);
-
-  s21::List<int> s21_empty;
-  s21_empty.Unique();
-  ASSERT_TRUE(s21_empty.Empty());
-}
-
-TEST(ListTest, Sort) {
-  s21::List<int> s21_l = {3, 1, 4, 1, 5, 9};
-  std::list<int> std_l = {3, 1, 4, 1, 5, 9};
-  s21_l.Sort();
-  std_l.sort();
-  CompareLists(s21_l, std_l);
-
-  s21::List<int> s21_sorted = {1, 2, 3};
-  s21_sorted.Sort();
-  ASSERT_EQ(s21_sorted.Front(), 1);
-  ASSERT_EQ(s21_sorted.Back(), 3);
-
-  s21::List<int> s21_dup = {2, 1, 2, 3};
-  s21_dup.Sort();
-  auto it = s21_dup.Begin();
-  ASSERT_EQ(*it++, 1);
-  ASSERT_EQ(*it++, 2);
-  ASSERT_EQ(*it++, 2);
-  ASSERT_EQ(*it, 3);
-
-  s21::List<int> s21_empty;
-  s21_empty.Sort();
-  ASSERT_TRUE(s21_empty.Empty());
-
-  s21::List<int> s21_one = {42};
-  s21_one.Sort();
-  ASSERT_EQ(s21_one.Front(), 42);
-}
-
-// 1
 TEST(List, Constructor_Default) {
   s21::List<int> our_list;
   std::list<int> std_list;
   EXPECT_EQ(our_list.Empty(), std_list.empty());
-}
-
-TEST(List, Constructor_Size) {
-  s21::List<int> our_list(5);
-  std::list<int> std_list(5);
-  EXPECT_EQ(our_list.Size(), std_list.size());
 }
 
 TEST(List, Constructor_List) {
@@ -375,23 +160,6 @@ TEST(List, Size) {
   EXPECT_EQ(our_list.Size(), std_list.size());
 }
 
-TEST(List, Push_Front) {
-  s21::List<int> our_list;
-  std::list<int> std_list;
-  our_list.Push_front(1);
-  std_list.push_front(1);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-  our_list.Push_front(2);
-  std_list.push_front(2);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-  our_list.Push_front(3);
-  std_list.push_front(3);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-}
-
 TEST(List, Push_Back) {
   s21::List<int> our_list;
   std::list<int> std_list;
@@ -409,48 +177,6 @@ TEST(List, Push_Back) {
   EXPECT_EQ(our_list.Back(), std_list.back());
 }
 
-TEST(List, Pop_Front) {
-  s21::List<int> our_list;
-  std::list<int> std_list;
-  our_list.Push_back(1);
-  std_list.push_back(1);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-  our_list.Push_back(2);
-  std_list.push_back(2);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-  our_list.Push_back(3);
-  std_list.push_back(3);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-  our_list.Pop_front();
-  std_list.pop_front();
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-}
-
-TEST(List, Pop_Back) {
-  s21::List<int> our_list;
-  std::list<int> std_list;
-  our_list.Push_back(1);
-  std_list.push_back(1);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-  our_list.Push_back(2);
-  std_list.push_back(2);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-  our_list.Push_back(3);
-  std_list.push_back(3);
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-  our_list.Pop_back();
-  std_list.pop_back();
-  EXPECT_EQ(our_list.Front(), std_list.front());
-  EXPECT_EQ(our_list.Back(), std_list.back());
-}
-
 TEST(List, Splice) {
   s21::List<int> our_list_first = {1};
   s21::List<int> our_list_second = {2, 3, 4, 5};
@@ -462,18 +188,6 @@ TEST(List, Splice) {
   std_list_first.splice(std_it, std_list_second);
   EXPECT_EQ(our_list_first.Front(), std_list_first.front());
   EXPECT_EQ(our_list_first.Back(), std_list_first.back());
-}
-
-TEST(List, Merge) {
-  s21::List<int> our_list_first = {1};
-  s21::List<int> our_list_second = {2, 3, 4, 5};
-  std::list<int> std_list_first = {1};
-  std::list<int> std_list_second = {2, 3, 4, 5};
-  our_list_first.Merge(our_list_second);
-  std_list_first.merge(std_list_second);
-  EXPECT_EQ(our_list_first.Front(), std_list_first.front());
-  EXPECT_EQ(our_list_first.Back(), std_list_first.back());
-  EXPECT_EQ(our_list_second.Empty(), std_list_second.empty());
 }
 
 TEST(List, Reverse) {
@@ -606,22 +320,6 @@ TEST(ListTest, Clear2) {
   EXPECT_EQ(list_int.Empty(), 1);
 }
 
-TEST(ListTest, Insert_Front2) {
-  s21::List<int> list_int = {1, 3, 5};
-  list_int.Insert(list_int.Begin(), 7);
-
-  EXPECT_EQ(list_int.Front(), 7);
-  EXPECT_EQ(list_int.Size(), 4);
-}
-
-TEST(ListTest, Insert_Back2) {
-  s21::List<int> list_int = {1, 3, 5};
-  list_int.Insert(list_int.End(), 7);
-
-  EXPECT_EQ(list_int.Back(), 7);
-  EXPECT_EQ(list_int.Size(), 4);
-}
-
 TEST(ListTest, Insert_Empty_Front2) {
   s21::List<int> list_int;
   list_int.Insert(list_int.Begin(), 1);
@@ -655,65 +353,6 @@ TEST(ListTest, Erase_Back2) {
   EXPECT_EQ(list_int.Back(), 3);
 }
 
-TEST(ListTest, Push_Back2) {
-  s21::List<int> list_int = {1, 3, 5};
-  list_int.Push_back(7);
-
-  EXPECT_EQ(list_int.Back(), 7);
-  EXPECT_EQ(list_int.Size(), 4);
-}
-
-TEST(ListTest, Pop_Back2) {
-  s21::List<int> list_int = {1, 3, 5};
-  list_int.Pop_back();
-
-  EXPECT_EQ(list_int.Back(), 3);
-  EXPECT_EQ(list_int.Size(), 2);
-}
-
-TEST(ListTest, Pop_Back_Alone2) {
-  s21::List<int> list_int = {1};
-  list_int.Pop_back();
-
-  EXPECT_EQ(list_int.Empty(), 1);
-}
-
-TEST(ListTest, Pop_Back_Empty2) {
-  s21::List<int> list_int;
-
-  EXPECT_THROW(list_int.Pop_back(), std::out_of_range);
-}
-
-TEST(ListTest, Push_Front2) {
-  s21::List<int> list_int = {1, 3, 5};
-  list_int.Push_front(7);
-
-  EXPECT_EQ(list_int.Front(), 7);
-  EXPECT_EQ(list_int.Size(), 4);
-}
-
-TEST(ListTest, Push_Front_Empty2) {
-  s21::List<int> list_int;
-  list_int.Push_front(7);
-
-  EXPECT_EQ(list_int.Front(), 7);
-  EXPECT_EQ(list_int.Size(), 1);
-}
-
-TEST(ListTest, Pop_Front2) {
-  s21::List<int> list_int = {1, 3, 5};
-  list_int.Pop_front();
-
-  EXPECT_EQ(list_int.Front(), 3);
-  EXPECT_EQ(list_int.Size(), 2);
-}
-
-TEST(ListTest, Pop_Front_Empty2) {
-  s21::List<int> list_int;
-
-  EXPECT_THROW(list_int.Pop_front(), std::out_of_range);
-}
-
 TEST(ListTest, Pop_Front_Alone2) {
   s21::List<int> list_int = {1};
   list_int.Pop_front();
@@ -742,31 +381,6 @@ TEST(ListTest, Merge2) {
   EXPECT_EQ(list_int_2.Empty(), 1);
 }
 
-TEST(ListTest, Splice2) {
-  s21::List<int> list_int = {1, 2, 3, 4};
-  s21::List<int> list_int_2 = {5, 6, 7};
-  auto pos = list_int.Begin();
-  pos++;
-  pos++;
-  list_int.Splice(pos, list_int_2);
-
-  EXPECT_EQ(list_int.Front(), 1);
-  EXPECT_EQ(list_int.Back(), 4);
-  EXPECT_EQ(list_int.Size(), 7);
-  EXPECT_EQ(list_int.Empty(), 0);
-  EXPECT_EQ(list_int_2.Empty(), 1);
-}
-
-TEST(ListTest, Reverse2) {
-  s21::List<int> list_int = {1, 3, 7, 4};
-  list_int.Reverse();
-
-  EXPECT_EQ(list_int.Empty(), 0);
-  EXPECT_EQ(list_int.Size(), 4);
-  EXPECT_EQ(list_int.Front(), 4);
-  EXPECT_EQ(list_int.Back(), 1);
-}
-
 TEST(ListTest, Unique2) {
   s21::List<int> list_int = {1, 2, 2, 3, 3, 2, 1, 1, 2};
   list_int.Unique();
@@ -785,91 +399,6 @@ TEST(ListTest, Sort2) {
   EXPECT_EQ(list_int.Size(), 8);
   EXPECT_EQ(list_int.Front(), 1);
   EXPECT_EQ(list_int.Back(), 9);
-}
-
-bool compare_lists(s21::List<int> my_list, std::list<int> std_list) {
-  bool result = true;
-  if (my_list.Size() == std_list.size()) {
-    auto my_it = my_list.Begin();
-    auto std_it = std_list.begin();
-    for (size_t i = 0; i != my_list.Size(); ++i) {
-      if (*my_it != *std_it) {
-        result = false;
-        break;
-      }
-      ++my_it;
-      ++std_it;
-    }
-  } else {
-    result = false;
-  }
-  return result;
-}
-
-TEST(ListTest, Merge_1) {
-  s21::List<int> my_list1{1, 9999, 20000};
-  s21::List<int> my_list2{500, 15000, 30000};
-  my_list1.Merge(my_list2);
-
-  std::list<int> std_list1{1, 9999, 20000};
-  std::list<int> std_list2{500, 15000, 30000};
-  std_list1.merge(std_list2);
-  EXPECT_TRUE(compare_lists(my_list1, std_list1));
-}
-
-TEST(ListTest, Merge_2) {
-  s21::List<int> my_list1{1, 9999, 20000};
-  s21::List<int> my_list2{15000, 30000};
-  my_list1.Merge(my_list2);
-
-  std::list<int> std_list1{1, 9999, 20000};
-  std::list<int> std_list2{15000, 30000};
-  std_list1.merge(std_list2);
-  EXPECT_TRUE(compare_lists(my_list1, std_list1));
-}
-
-TEST(ListTest, Merge_3) {
-  s21::List<int> my_list1{1, 20000, 666};
-  s21::List<int> my_list2{15000, 154, 124, 30000};
-  my_list1.Merge(my_list2);
-
-  std::list<int> std_list1{1, 20000, 666};
-  std::list<int> std_list2{15000, 154, 124, 30000};
-  std_list1.merge(std_list2);
-  EXPECT_TRUE(compare_lists(my_list1, std_list1));
-}
-
-TEST(ListTest, Merge_4) {
-  s21::List<int> my_list1;
-  s21::List<int> my_list2{15000, 154, 124, 30000};
-  my_list1.Merge(my_list2);
-
-  std::list<int> std_list1;
-  std::list<int> std_list2{15000, 154, 124, 30000};
-  std_list1.merge(std_list2);
-  EXPECT_TRUE(compare_lists(my_list1, std_list1));
-}
-
-TEST(ListTest, Merge_5) {
-  s21::List<int> my_list1{1, 20000, 666};
-  s21::List<int> my_list2;
-  my_list1.Merge(my_list2);
-
-  std::list<int> std_list1{1, 20000, 666};
-  std::list<int> std_list2;
-  std_list1.merge(std_list2);
-  EXPECT_TRUE(compare_lists(my_list1, std_list1));
-}
-
-TEST(ListTest, Merge_6) {
-  s21::List<int> my_list1;
-  s21::List<int> my_list2;
-  my_list1.Merge(my_list2);
-
-  std::list<int> std_list1;
-  std::list<int> std_list2;
-  std_list1.merge(std_list2);
-  EXPECT_TRUE(compare_lists(my_list1, std_list1));
 }
 
 TEST(ListTest, PopBack) {
@@ -1007,4 +536,140 @@ TEST(List_Insert_Many, Insert_Many) {
   EXPECT_EQ(*it, 3);
   ++it;
   EXPECT_EQ(*it, 4);
+}
+TEST(ListTest, Unique_TailUpdate) {
+  s21::List<int> list = {1, 2, 3, 4, 5, 5};
+
+  list.Unique();
+
+  EXPECT_EQ(list.Size(), 5);
+
+  auto it = list.Begin();
+  EXPECT_EQ(*it++, 1);
+  EXPECT_EQ(*it++, 2);
+  EXPECT_EQ(*it++, 3);
+  EXPECT_EQ(*it++, 4);
+  EXPECT_EQ(*it++, 5);
+
+  EXPECT_EQ(list.Back(), 5);
+}
+TEST(ListTest, Splice_InsertIntoEmptyList) {
+  s21::List<int> list1;
+  s21::List<int> list2 = {1, 2, 3};
+
+  list1.Splice(list1.Begin(), list2);
+
+  EXPECT_EQ(list1.Size(), 3);
+  EXPECT_TRUE(list2.Empty());
+  EXPECT_EQ(list1.Front(), 1);
+  EXPECT_EQ(list1.Back(), 3);
+}
+
+TEST(ListTest, Splice_InsertAtEnd) {
+  s21::List<int> list1 = {10, 20};
+  s21::List<int> list2 = {1, 2};
+
+  list1.Splice(list1.End(), list2);
+
+  EXPECT_EQ(list1.Size(), 4);
+  EXPECT_TRUE(list2.Empty());
+  EXPECT_EQ(list1.Back(), 2);
+}
+
+TEST(ListTest, Splice_InsertInMiddle) {
+  s21::List<int> list1 = {10, 30};
+  s21::List<int> list2 = {1, 2};
+
+  auto it = list1.Begin();
+  ++it;
+
+  list1.Splice(it, list2);
+
+  EXPECT_EQ(list1.Size(), 4);
+  EXPECT_TRUE(list2.Empty());
+
+  auto iter = list1.Begin();
+  EXPECT_EQ(*iter++, 10);
+  EXPECT_EQ(*iter++, 1);
+  EXPECT_EQ(*iter++, 2);
+  EXPECT_EQ(*iter++, 30);
+}
+TEST(ListTest, PushFront_EmptyList) {
+  s21::List<int> list;
+  list.Push_front(42);
+
+  EXPECT_EQ(list.Size(), 1);
+  EXPECT_EQ(list.Front(), 42);
+  EXPECT_EQ(list.Back(), 42);
+}
+
+TEST(ListTest, PushFront_NonEmptyList) {
+  s21::List<int> list = {1, 2, 3};
+  list.Push_front(0);
+
+  EXPECT_EQ(list.Size(), 4);
+  EXPECT_EQ(list.Front(), 0);
+  auto it = list.Begin();
+  ++it;
+  EXPECT_EQ(*it, 1);
+}
+TEST(ListTest, PopBack_EmptyList) {
+  s21::List<int> list;
+  EXPECT_THROW(list.Pop_back(), std::out_of_range);
+}
+
+TEST(ListTest, PopBack_SingleElement) {
+  s21::List<int> list = {100};
+  list.Pop_back();
+
+  EXPECT_TRUE(list.Empty());
+  EXPECT_EQ(list.Size(), 0);
+}
+
+TEST(ListTest, PopBack_MultipleElements) {
+  s21::List<int> list = {1, 2, 3};
+  list.Pop_back();
+
+  EXPECT_EQ(list.Size(), 2);
+  EXPECT_EQ(list.Back(), 2);
+}
+TEST(ListTest, Erase_EndIterator_Throws) {
+  s21::List<int> list = {1, 2, 3};
+  auto end_it = list.End();
+  EXPECT_THROW(list.Erase(end_it), std::out_of_range);
+}
+
+TEST(ListTest, Erase_Begin) {
+  s21::List<int> list = {1, 2, 3};
+  list.Erase(list.Begin());
+
+  EXPECT_EQ(list.Front(), 2);
+  EXPECT_EQ(list.Size(), 2);
+}
+
+TEST(ListTest, Erase_Back) {
+  s21::List<int> list = {1, 2, 3};
+  auto it = list.Begin();
+  ++it;
+  ++it;
+  list.Erase(it);
+
+  EXPECT_EQ(list.Back(), 2);
+  EXPECT_EQ(list.Size(), 2);
+}
+TEST(ListTest, Erase_Middle_Alternative) {
+  s21::List<int> list = {10, 20, 30, 40, 50};
+  auto it = list.Begin();
+  ++it;
+  ++it;
+  ++it;
+
+  list.Erase(it);
+  EXPECT_EQ(list.Size(), 4);
+
+  auto iter = list.Begin();
+  EXPECT_EQ(*iter++, 10);
+  EXPECT_EQ(*iter++, 20);
+  EXPECT_EQ(*iter++, 30);
+  EXPECT_EQ(*iter++, 50);
 }

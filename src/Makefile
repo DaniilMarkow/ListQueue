@@ -1,4 +1,3 @@
-
 UNAME_S := $(shell uname -s)
 
 ifeq ($(UNAME_S),Darwin)
@@ -35,36 +34,24 @@ TEST_DIR = tests
 OBJ_DIR = build
 GCOV_DIR = gcov_report
 LIST_DIR = $(CONTAINERS_DIR)/list
-
-SRC_FILES = $(wildcard $(LIST_DIR)/*.cpp)
+QUEUE_DIR = $(CONTAINERS_DIR)/queue
 TEST_FILES = $(wildcard $(TEST_DIR)/*.cpp)
-OBJ_FILES = $(patsubst $(LIST_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRC_FILES))
-LIB = $(OBJ_DIR)/s21_containers.a
 TEST_EXEC = $(OBJ_DIR)/s21_test_containers
 GCOV_TEST_EXEC = $(OBJ_DIR)/s21_test_containers_gcov
 ASAN_EXEC = $(OBJ_DIR)/s21_test_containers_asan
 
-all: $(LIB)
+all: test
 
-s21_containers.a: $(LIB)
-
-$(LIB): $(OBJ_FILES)
-	@mkdir -p $(@D)
-	@ar rc $@ $^
-	@ranlib $@
-
-$(OBJ_DIR)/%.o: $(LIST_DIR)/%.cpp
-	@mkdir -p $(@D)
-	@$(CXX) $(CXXFLAGS) -I$(CONTAINERS_DIR) -I$(LIST_DIR) -c $< -o $@
-
-test: $(LIB)
-	@mkdir -p $(OBJ_DIR)
-	@$(CXX) $(CXXFLAGS) -I$(CONTAINERS_DIR) -I$(LIST_DIR) $(TEST_FILES) $(LIB) $(LDFLAGS) -o $(TEST_EXEC)
+test: $(TEST_EXEC)
 	@./$(TEST_EXEC)
 
-$(GCOV_TEST_EXEC): $(SRC_FILES) $(TEST_FILES)
+$(TEST_EXEC): $(TEST_FILES)
 	@mkdir -p $(@D)
-	@$(CXX) $(CXXFLAGS) -I$(CONTAINERS_DIR) -I$(LIST_DIR) $(TEST_FILES) $(SRC_FILES) $(LDFLAGS) -o $@
+	@$(CXX) $(CXXFLAGS) -I$(CONTAINERS_DIR) -I$(LIST_DIR) -I$(QUEUE_DIR) $^ $(LDFLAGS) -o $@
+
+$(GCOV_TEST_EXEC): $(TEST_FILES)
+	@mkdir -p $(@D)
+	@$(CXX) $(CXXFLAGS) -I$(CONTAINERS_DIR) -I$(LIST_DIR) -I$(QUEUE_DIR) $^ $(LDFLAGS) -o $@
 
 gcov_report: $(GCOV_TEST_EXEC)
 	@mkdir -p $(GCOV_DIR)
@@ -97,22 +84,22 @@ else
 	          --log-file=./logs/valgrind_log.txt ./$(TEST_EXEC)
 endif
 
-test_asan: $(LIB)
+test_asan: $(TEST_FILES)
 	@mkdir -p $(OBJ_DIR)
-	@$(CXX) $(CXXFLAGS) $(ASAN_FLAGS) -I$(CONTAINERS_DIR) -I$(LIST_DIR) $(TEST_FILES) $(LIB) $(LDFLAGS) -fsanitize=address -o $(ASAN_EXEC)
+	@$(CXX) $(CXXFLAGS) $(ASAN_FLAGS) -I$(CONTAINERS_DIR) -I$(LIST_DIR) -I$(QUEUE_DIR) $^ $(LDFLAGS) -fsanitize=address -o $(ASAN_EXEC)
 	@./$(ASAN_EXEC)
 
 clean:
 	@rm -rf $(OBJ_DIR) $(GCOV_DIR) *.gcno *.gcda *.info ./logs *.profraw
 
 style:
-	@clang-format -i -style=google $(SRC_DIR)/*.h $(LIST_DIR)/*.h $(LIST_DIR)/*.tpp $(TEST_DIR)/*.cpp
+	@clang-format -i -style=google $(CONTAINERS_DIR)/*.h $(LIST_DIR)/*.h $(LIST_DIR)/*.tpp $(QUEUE_DIR)/*.h $(QUEUE_DIR)/*.tpp $(TEST_DIR)/*.cpp
 
 test_style:
-	@clang-format -n -style=google $(SRC_DIR)/*.h $(LIST_DIR)/*.h $(LIST_DIR)/*.tpp $(TEST_DIR)/*.cpp
+	@clang-format -n -style=google $(CONTAINERS_DIR)/*.h $(LIST_DIR)/*.h $(LIST_DIR)/*.tpp $(QUEUE_DIR)/*.h $(QUEUE_DIR)/*.tpp $(TEST_DIR)/*.cpp
 
 clean_coverage:
 	@find . -name '*.gcda' -delete
 	@rm -rf $(GCOV_DIR)
 
-.PHONY: all clean test gcov_report style test_style test_valgrind test_cppcheck s21_containers.a
+.PHONY: all clean test gcov_report style test_style test_valgrind test_asan clean_coverage

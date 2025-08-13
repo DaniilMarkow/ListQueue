@@ -4,7 +4,6 @@
 #include <initializer_list>
 #include <iostream>
 #include <limits>
-#include <stdexcept>
 
 namespace s21 {
 template <typename T>
@@ -23,7 +22,7 @@ class List {
   using value_type = T;
   using reference = T &;
   using const_reference = const T &;
-  using size_type = std::size_t;
+  using size_type = size_t;
 
   class ListConstIterator {
    public:
@@ -123,6 +122,12 @@ class List {
     bool operator!=(const ListIterator &other) const {
       return ptr_ != other.ptr_;
     }
+    ListIterator &operator=(const ListIterator &other) {
+      if (this != &other) {
+        ptr_ = other.ptr_;
+      }
+      return *this;
+    }
 
    private:
     ListNode *ptr_;
@@ -178,7 +183,7 @@ class List {
   ListNode *tail_;
   size_type size_;
 };
-}  // namespace s21
+}
 
 #include "s21_list.tpp"
 
