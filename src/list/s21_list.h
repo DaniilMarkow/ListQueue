@@ -183,7 +183,7 @@ class List {
   ListNode *tail_;
   size_type size_;
 };
-}
+}  // namespace s21
 
 #include "s21_list.tpp"
 

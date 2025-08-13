@@ -351,9 +351,6 @@ void List<T>::Sort() {
       Push_back(p2->value);
       p2 = p2->next;
     }
-
-    left.head_ = left.tail_ = nullptr;
-    right.head_ = right.tail_ = nullptr;
   }
 }
 
@@ -378,6 +375,6 @@ template <typename... Args>
 void List<T>::Insert_many_front(Args &&...args) {
   (Push_front(std::forward<Args>(args)), ...);
 }
-}
+}  // namespace s21
 
 #endif
