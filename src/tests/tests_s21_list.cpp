@@ -1,8 +1,7 @@
 #include <gtest/gtest.h>
-
 #include <list>
-
 #include "../list/s21_list.h"
+
 template class s21::List<int>;
 
 bool compare_lists(s21::List<int> my_list, std::list<int> std_list) {

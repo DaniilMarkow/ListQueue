@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
-
+#include <queue>
 #include "s21_queue.h"
+
 template class s21::Queue<int>;
 namespace s21 {
 namespace {

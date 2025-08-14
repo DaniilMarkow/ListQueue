@@ -287,24 +287,15 @@ void List<T>::Splice(iterator pos, List &other) {
 
 template <typename T>
 void List<T>::Unique() {
-  if (size_ >= 2) {
-    ListNode *current = head_;
-    while (current && current->next) {
-      if (current->value == current->next->value) {
-        ListNode *to_delete = current->next;
-        current->next = to_delete->next;
-
-        if (to_delete->next) {
-          to_delete->next->prev = current;
-        } else {
-          tail_ = current;
-        }
-
-        delete to_delete;
-        size_--;
-      } else {
-        current = current->next;
-      }
+  for (ListNode *current = head_; current && current->next;) {
+    if (current->value == current->next->value) {
+      ListNode *to_delete = current->next;
+      current->next = to_delete->next;
+      to_delete->next ? to_delete->next->prev = current : tail_ = current;
+      delete to_delete;
+      size_--;
+    } else {
+      current = current->next;
     }
   }
 }
